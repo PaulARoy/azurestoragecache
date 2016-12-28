@@ -97,28 +97,19 @@ func (c *Cache) Delete(key string) bool {
 // The environment variables AZURESTORAGE_ACCOUNT_NAME and AZURESTORAGE_ACCESS_KEY 
 // are used as credentials if nothing is provided.
 func New(accountName string, accountKey string, containerName string) (*Cache, bool, error) {
-	var accName string
-	var accKey string
-	var contName string
+	accName := accountName
+	accKey string := accountKey
+	contName string := containerName
 	
-	if (len(accountName) > 0) {
-		accName = accountName
-	}
-	else {
+	if (len(accName) <= 0) {
 		accName = os.Getenv("AZURESTORAGE_ACCOUNT_NAME")
 	}
 	
-	if (len(accountKey) > 0) {
-		accKey = accountKey
-	}
-	else {
+	if (len(accKey) <= 0) {
 		accKey = os.Getenv("AZURESTORAGE_ACCESS_KEY")
 	}
 	
-	if (len(accountName) > 0) {
-		contName = containerName
-	}
-	else {
+	if (len(contName) <= 0)
 		contName = "cache"
 	}
 	
