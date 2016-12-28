@@ -62,14 +62,15 @@ func (c *Cache) Set(key string, block []byte) {
 	}
 }
 
-func (c *Cache) Delete(key string) {
+func (c *Cache) Delete(key string) bool {
 	res, err := c.Client.DeleteBlobIfExists(c.Config.ContainerName, key, nil)
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Delete failed: %s", err)
 		}
-		return
+		return false
 	}
+	return res
 }
 
 // New returns a new Cache with underlying client for Azure Storage
@@ -89,6 +90,10 @@ func New(accountName string, accountKey string, containerName string) *Cache {
 	}
 
 	api, err := vendorstorage.NewBasicClient(cache.Config.AccountName, cache.Config.AccountKey)
+	if err != nil {
+		return nil
+	}
+	
 	cache.Client = api.GetBlobService()
 	cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, 
 											vendorstorage.ContainerAccessTypeBlob)
