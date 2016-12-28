@@ -80,7 +80,7 @@ func (c *Cache) Delete(key string) bool {
 // The environment variables AZURESTORAGE_ACCOUNT_NAME and AZURESTORAGE_ACCESS_KEY 
 // are used as credentials. To use different credentials, construct a Cache object 
 // manually.
-func New(accountName string, accountKey string, containerName string) *Cache {
+func New(accountName string, accountKey string, containerName string) (*Cache, error) {
 	cache := Cache{
 		Config: Config{
 			AccountName: accountName, // || os.Getenv("AZURESTORAGE_ACCOUNT_NAME"),
@@ -91,11 +91,11 @@ func New(accountName string, accountKey string, containerName string) *Cache {
 
 	api, err := vendorstorage.NewBasicClient(cache.Config.AccountName, cache.Config.AccountKey)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	
 	cache.Client = api.GetBlobService()
 	cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, 
 											vendorstorage.ContainerAccessTypeBlob)
-	return &cache
+	return &cache, nil
 }

@@ -8,5 +8,5 @@ import (
 
 func main() {
 	flag.Parse()
-	azurestoragecache.New(nil, nil, "Cache")
+	azurestoragecache.New("", "", "Cache")
 }
