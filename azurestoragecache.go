@@ -102,7 +102,7 @@ func New(accountName string, accountKey string, containerName string) (*Cache, e
 		return nil, err
 	}
 	if !res {
-		return nil, nill
+		return nil, nil
 	}
 	
 	return &cache, nil
