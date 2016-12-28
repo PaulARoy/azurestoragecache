@@ -18,7 +18,7 @@ type Cache struct {
 	Config Config
 	
 	// The Azure Blob Storage Client
-	Client vendorstorage.BlobStorageClient
+	Client vendorstorage.Client
 }
 
 type Config struct {
@@ -33,7 +33,7 @@ type Config struct {
 var noLogErrors, _ = strconv.ParseBool(os.Getenv("NO_LOG_AZUREBSCACHE_ERRORS"))
 
 func (c *Cache) Get(key string) (resp []byte, ok bool) {
-	rdr, err := c.Client.GetBlob(c.Config.ContainerName, key)
+	rdr, err := c.Client.GetBlobService().GetBlob(c.Config.ContainerName, key)
 	if err != nil {
 		return []byte{}, false
 	}
@@ -49,7 +49,7 @@ func (c *Cache) Get(key string) (resp []byte, ok bool) {
 }
 
 func (c *Cache) Set(key string, block []byte) {
-	err := c.Client.CreateBlockBlobFromReader(c.Config.ContainerName, 
+	err := c.Client.GetBlobService().CreateBlockBlobFromReader(c.Config.ContainerName, 
 												key, 
 												uint64(len(block)), 
 												bytes.NewReader(block), 
@@ -63,7 +63,7 @@ func (c *Cache) Set(key string, block []byte) {
 }
 
 func (c *Cache) Delete(key string) bool {
-	res, err := c.Client.DeleteBlobIfExists(c.Config.ContainerName, key, nil)
+	res, err := c.Client.GetBlobService().DeleteBlobIfExists(c.Config.ContainerName, key, nil)
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Delete failed: %s", err)
@@ -94,9 +94,9 @@ func New(accountName string, accountKey string, containerName string) (*Cache, b
 		return nil, false, err
 	}
 	
-	cache.Client = api.GetBlobService()
+	cache.Client = api
 	
-	res, err := cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, 
+	res, err := cache.Client.GetBlobService().CreateContainerIfNotExists(cache.Config.ContainerName, 
 											vendorstorage.ContainerAccessTypeBlob)
 	if err != nil {
 		return nil, false, err
