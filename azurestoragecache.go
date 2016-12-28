@@ -77,15 +77,16 @@ func (c *Cache) Set(key string, block []byte) {
 	}
 }
 
-func (c *Cache) Delete(key string) bool {
+func (c *Cache) Delete(key string) {
 	res, err := c.Client.DeleteBlobIfExists(c.Config.ContainerName, key, nil)
+	if !noLogErrors {
+		log.Printf("azurestoragecache.Delete result: %s", res)
+	}
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Delete failed: %s", err)
 		}
-		return false
 	}
-	return res
 }
 
 // New returns a new Cache with underlying client for Azure Storage

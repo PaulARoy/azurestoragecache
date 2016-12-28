@@ -80,8 +80,7 @@ func main() {
 	
     // delete key
 	fmt.Println("***** DELETE *****")
-    res = cache.Delete("mykey")
-	fmt.Println("RESULT (should be true): ", res)
+    cache.Delete("mykey")
 	fmt.Println("--OK--\n")
 	
     // check we have nothing left
