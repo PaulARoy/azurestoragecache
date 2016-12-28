@@ -109,7 +109,7 @@ func New(accountName string, accountKey string, containerName string) (*Cache, b
 		accKey = os.Getenv("AZURESTORAGE_ACCESS_KEY")
 	}
 	
-	if (len(contName) <= 0)
+	if (len(contName) <= 0) {
 		contName = "cache"
 	}
 	
