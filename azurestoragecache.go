@@ -1,6 +1,6 @@
 // Package azurestoragecache provides an implementation of httpcache.Cache that
 // stores and retrieves data using Azure Storage.
-package azurestoragecache // import "sourcegraph.com/PaulARoy/azurestoragecache"
+package azurestoragecache // import "github.com/PaulARoy/azurestoragecache"
 
 import (
 	"io/ioutil"

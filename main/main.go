@@ -3,7 +3,7 @@ package main
 
 import (
 	"flag"
-	"sourcegraph.com/PaulARoy/azurestoragecache"
+	"github.com/PaulARoy/azurestoragecache"
 )
 
 func main() {
