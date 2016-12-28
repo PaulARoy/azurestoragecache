@@ -98,8 +98,8 @@ func (c *Cache) Delete(key string) bool {
 // are used as credentials if nothing is provided.
 func New(accountName string, accountKey string, containerName string) (*Cache, bool, error) {
 	accName := accountName
-	accKey string := accountKey
-	contName string := containerName
+	accKey := accountKey
+	contName := containerName
 	
 	if (len(accName) <= 0) {
 		accName = os.Getenv("AZURESTORAGE_ACCOUNT_NAME")
