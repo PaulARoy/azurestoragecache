@@ -1,3 +1,17 @@
+// Copyright 2017 Paul Roy All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Package azurestoragecache provides an implementation of httpcache.Cache that
 // stores and retrieves data using Azure Storage.
 package azurestoragecache // import "github.com/PaulARoy/azurestoragecache"
@@ -76,17 +90,43 @@ func (c *Cache) Delete(key string) bool {
 
 // New returns a new Cache with underlying client for Azure Storage
 //
-// containerName is the container name for azure blob service
+// accountName is the Azure Storage Account Name (part of credentials)
+// accountKey is the Azure Storage Account Key (part of credentials)
+// containerName is the container name in which images will be stored (/!\ LOWER CASE)
 //
 // The environment variables AZURESTORAGE_ACCOUNT_NAME and AZURESTORAGE_ACCESS_KEY 
-// are used as credentials. To use different credentials, construct a Cache object 
-// manually.
+// are used as credentials if nothing is provided.
 func New(accountName string, accountKey string, containerName string) (*Cache, bool, error) {
+	var accName string
+	var accKey string
+	var contName string
+	
+	if (len(accountName) > 0) {
+		accName = accountName
+	}
+	else {
+		accName = os.Getenv("AZURESTORAGE_ACCOUNT_NAME")
+	}
+	
+	if (len(accountKey) > 0) {
+		accKey = accountKey
+	}
+	else {
+		accKey = os.Getenv("AZURESTORAGE_ACCESS_KEY")
+	}
+	
+	if (len(accountName) > 0) {
+		contName = containerName
+	}
+	else {
+		contName = "cache"
+	}
+	
 	cache := Cache{
 		Config: Config{
-			AccountName: accountName, // || os.Getenv("AZURESTORAGE_ACCOUNT_NAME"),
-			AccountKey: accountKey, // || os.Getenv("AZURESTORAGE_ACCESS_KEY"),
-			ContainerName: containerName,
+			AccountName: accName,
+			AccountKey: accKey,
+			ContainerName: contName,
 		},
 	}
 
