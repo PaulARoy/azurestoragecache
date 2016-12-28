@@ -1,0 +1,18 @@
+{
+	"ArtifactsDest": "build",
+	"PackageVersion": "0.0.1",
+	"TaskSettings": {
+		"pkg-build": {
+			"metadata": {
+				"description": "http cache azure storage",
+				"long-description": " azurestoragecache is a http cache implementation for azure storage",
+				"maintainer": "Paul Roy",
+				"maintainer-email": "paul.roy.pro@gmail.com"
+			},
+      "metadata-deb": {
+        "Homepage": "https://github.com/PaulARoy/azurestoragecache"
+      }
+		}
+	},
+	"ConfigVersion": "0.1"
+}
