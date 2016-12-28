@@ -40,7 +40,7 @@ func main() {
 	var containerName = flag.String("containerName", "cache", "Azure Storage Container Name")
 
 	// create cache
-	cache, res, err := azurestoragecache.New(accountName, accountKey, containerName)
+	cache, res, err := azurestoragecache.New(*accountName, *accountKey, *containerName)
 
 	fmt.Println("***** CREATION *****")
 	fmt.Println("Container has been created: ", res)
