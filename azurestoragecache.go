@@ -95,7 +95,12 @@ func New(accountName string, accountKey string, containerName string) (*Cache, e
 	}
 	
 	cache.Client = api.GetBlobService()
-	cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, 
+	
+	res, err := cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, 
 											vendorstorage.ContainerAccessTypeBlob)
+	if err != nil {
+		return nil, err
+	}
+	
 	return &cache, nil
 }
