@@ -65,10 +65,10 @@ func (c *Cache) Get(key string) (resp []byte, ok bool) {
 
 func (c *Cache) Set(key string, block []byte) {
 	err := c.Client.CreateBlockBlobFromReader(c.Config.ContainerName, 
-												key, 
-												uint64(len(block)), 
-												bytes.NewReader(block), 
-												nil)
+									key, 
+									uint64(len(block)), 
+									bytes.NewReader(block), 
+									nil)
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Set failed: %s", err)
@@ -128,8 +128,7 @@ func New(accountName string, accountKey string, containerName string) (*Cache, b
 	
 	cache.Client = api.GetBlobService()
 	
-	res, err := cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, 
-											vendorstorage.ContainerAccessTypeBlob)
+	res, err := cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, vendorstorage.ContainerAccessTypeBlob)
 	if err != nil {
 		return nil, false, err
 	}
