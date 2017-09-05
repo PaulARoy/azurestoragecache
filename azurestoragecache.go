@@ -17,11 +17,11 @@
 package azurestoragecache // import "github.com/PaulARoy/azurestoragecache"
 
 import (
+	"bytes"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
-	"bytes"
 
 	vendorstorage "github.com/Azure/azure-sdk-for-go/storage"
 )
@@ -30,7 +30,7 @@ import (
 type Cache struct {
 	// Our configuration for Azure Storage
 	Config Config
-	
+
 	// The Azure Blob Storage Client
 	Client vendorstorage.BlobStorageClient
 }
@@ -38,7 +38,7 @@ type Cache struct {
 type Config struct {
 	// Account configuration for Azure Storage
 	AccountName string
-	AccountKey string
+	AccountKey  string
 
 	// Container name to use to store blob
 	ContainerName string
@@ -51,24 +51,24 @@ func (c *Cache) Get(key string) (resp []byte, ok bool) {
 	if err != nil {
 		return []byte{}, false
 	}
-	
+
 	resp, err = ioutil.ReadAll(rdr)
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Get failed: %s", err)
 		}
 	}
-	
+
 	rdr.Close()
 	return resp, err == nil
 }
 
 func (c *Cache) Set(key string, block []byte) {
-	err := c.Client.CreateBlockBlobFromReader(c.Config.ContainerName, 
-									key, 
-									uint64(len(block)), 
-									bytes.NewReader(block), 
-									nil)
+	err := c.Client.CreateBlockBlobFromReader(c.Config.ContainerName,
+		key,
+		uint64(len(block)),
+		bytes.NewReader(block),
+		nil)
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Set failed: %s", err)
@@ -95,29 +95,29 @@ func (c *Cache) Delete(key string) {
 // accountKey is the Azure Storage Account Key (part of credentials)
 // containerName is the container name in which images will be stored (/!\ LOWER CASE)
 //
-// The environment variables AZURESTORAGE_ACCOUNT_NAME and AZURESTORAGE_ACCESS_KEY 
+// The environment variables AZURESTORAGE_ACCOUNT_NAME and AZURESTORAGE_ACCESS_KEY
 // are used as credentials if nothing is provided.
 func New(accountName string, accountKey string, containerName string) (*Cache, bool, error) {
 	accName := accountName
 	accKey := accountKey
 	contName := containerName
-	
-	if (len(accName) <= 0) {
+
+	if len(accName) <= 0 {
 		accName = os.Getenv("AZURESTORAGE_ACCOUNT_NAME")
 	}
-	
-	if (len(accKey) <= 0) {
+
+	if len(accKey) <= 0 {
 		accKey = os.Getenv("AZURESTORAGE_ACCESS_KEY")
 	}
-	
-	if (len(contName) <= 0) {
+
+	if len(contName) <= 0 {
 		contName = "cache"
 	}
-	
+
 	cache := Cache{
 		Config: Config{
-			AccountName: accName,
-			AccountKey: accKey,
+			AccountName:   accName,
+			AccountKey:    accKey,
 			ContainerName: contName,
 		},
 	}
@@ -126,13 +126,13 @@ func New(accountName string, accountKey string, containerName string) (*Cache, b
 	if err != nil {
 		return nil, false, err
 	}
-	
+
 	cache.Client = api.GetBlobService()
-	
+
 	res, err := cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, vendorstorage.ContainerAccessTypeBlob)
 	if err != nil {
 		return nil, false, err
 	}
-	
+
 	return &cache, res, nil
 }
