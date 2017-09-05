@@ -37,9 +37,14 @@ type Cache struct {
 
 var noLogErrors, _ = strconv.ParseBool(os.Getenv("NO_LOG_AZUREBSCACHE_ERRORS"))
 
+// blob retrieves a storage.Blob reference for the specified key.
+func (c *Cache) blob(key string) *storage.Blob {
+	return c.client.GetContainerReference(c.container).GetBlobReference(key)
+}
+
 // Get the cached value with the specified key.
 func (c *Cache) Get(key string) (resp []byte, ok bool) {
-	rdr, err := c.client.GetBlob(c.container, key)
+	rdr, err := c.blob(key).Get(nil)
 	if err != nil {
 		return []byte{}, false
 	}
@@ -57,11 +62,7 @@ func (c *Cache) Get(key string) (resp []byte, ok bool) {
 
 // Set the cached value with the specified key.
 func (c *Cache) Set(key string, value []byte) {
-	err := c.client.CreateBlockBlobFromReader(c.container,
-		key,
-		uint64(len(value)),
-		bytes.NewReader(value),
-		nil)
+	err := c.blob(key).CreateBlockBlobFromReader(bytes.NewReader(value), nil)
 	if err != nil {
 		if !noLogErrors {
 			log.Printf("azurestoragecache.Set failed: %s", err)
@@ -72,7 +73,7 @@ func (c *Cache) Set(key string, value []byte) {
 
 // Delete the cached value with the specified key.
 func (c *Cache) Delete(key string) {
-	res, err := c.client.DeleteBlobIfExists(c.container, key, nil)
+	res, err := c.blob(key).DeleteIfExists(nil)
 	if !noLogErrors {
 		log.Printf("azurestoragecache.Delete result: %s", res)
 	}
@@ -114,7 +115,7 @@ func New(accountName string, accountKey string, containerName string) (*Cache, e
 		container: containerName,
 	}
 
-	_, err := cache.client.CreateContainerIfNotExists(cache.container, storage.ContainerAccessTypeBlob)
+	_, err = cache.client.GetContainerReference(cache.container).CreateIfNotExists(&storage.CreateContainerOptions{Access: storage.ContainerAccessTypeBlob})
 	if err != nil {
 		return nil, err
 	}
