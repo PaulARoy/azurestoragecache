@@ -23,31 +23,23 @@ import (
 	"os"
 	"strconv"
 
-	vendorstorage "github.com/Azure/azure-sdk-for-go/storage"
+	"github.com/Azure/azure-sdk-for-go/storage"
 )
 
-// Cache objects store and retrieve data using Azure Storage
+// Cache stores and retrieves data using Azure Storage.
 type Cache struct {
-	// Our configuration for Azure Storage
-	Config Config
-
 	// The Azure Blob Storage Client
-	Client vendorstorage.BlobStorageClient
-}
+	client storage.BlobStorageClient
 
-type Config struct {
-	// Account configuration for Azure Storage
-	AccountName string
-	AccountKey  string
-
-	// Container name to use to store blob
-	ContainerName string
+	// container name to use to store blobs
+	container string
 }
 
 var noLogErrors, _ = strconv.ParseBool(os.Getenv("NO_LOG_AZUREBSCACHE_ERRORS"))
 
+// Get the cached value with the specified key.
 func (c *Cache) Get(key string) (resp []byte, ok bool) {
-	rdr, err := c.Client.GetBlob(c.Config.ContainerName, key)
+	rdr, err := c.client.GetBlob(c.container, key)
 	if err != nil {
 		return []byte{}, false
 	}
@@ -63,11 +55,12 @@ func (c *Cache) Get(key string) (resp []byte, ok bool) {
 	return resp, err == nil
 }
 
-func (c *Cache) Set(key string, block []byte) {
-	err := c.Client.CreateBlockBlobFromReader(c.Config.ContainerName,
+// Set the cached value with the specified key.
+func (c *Cache) Set(key string, value []byte) {
+	err := c.client.CreateBlockBlobFromReader(c.container,
 		key,
-		uint64(len(block)),
-		bytes.NewReader(block),
+		uint64(len(value)),
+		bytes.NewReader(value),
 		nil)
 	if err != nil {
 		if !noLogErrors {
@@ -77,8 +70,9 @@ func (c *Cache) Set(key string, block []byte) {
 	}
 }
 
+// Delete the cached value with the specified key.
 func (c *Cache) Delete(key string) {
-	res, err := c.Client.DeleteBlobIfExists(c.Config.ContainerName, key, nil)
+	res, err := c.client.DeleteBlobIfExists(c.container, key, nil)
 	if !noLogErrors {
 		log.Printf("azurestoragecache.Delete result: %s", res)
 	}
@@ -89,50 +83,41 @@ func (c *Cache) Delete(key string) {
 	}
 }
 
-// New returns a new Cache with underlying client for Azure Storage
+// New returns a new Cache with underlying client for Azure Storage.
 //
-// accountName is the Azure Storage Account Name (part of credentials)
-// accountKey is the Azure Storage Account Key (part of credentials)
-// containerName is the container name in which images will be stored (/!\ LOWER CASE)
+// accountName and accountKey are the Azure Storage credentials.  If either are
+// empty, the contents of the environment variables AZURESTORAGE_ACCOUNT_NAME
+// and AZURESTORAGE_ACCESS_KEY will be used.
 //
-// The environment variables AZURESTORAGE_ACCOUNT_NAME and AZURESTORAGE_ACCESS_KEY
-// are used as credentials if nothing is provided.
-func New(accountName string, accountKey string, containerName string) (*Cache, bool, error) {
-	accName := accountName
-	accKey := accountKey
-	contName := containerName
-
-	if len(accName) <= 0 {
-		accName = os.Getenv("AZURESTORAGE_ACCOUNT_NAME")
+// containerName is the container name in which cached values will be stored.
+// If not specified, "cache" will be used.
+func New(accountName string, accountKey string, containerName string) (*Cache, error) {
+	if accountName == "" {
+		accountName = os.Getenv("AZURESTORAGE_ACCOUNT_NAME")
 	}
 
-	if len(accKey) <= 0 {
-		accKey = os.Getenv("AZURESTORAGE_ACCESS_KEY")
+	if accountKey == "" {
+		accountKey = os.Getenv("AZURESTORAGE_ACCESS_KEY")
 	}
 
-	if len(contName) <= 0 {
-		contName = "cache"
+	if containerName == "" {
+		containerName = "cache"
+	}
+
+	client, err := storage.NewBasicClient(accountName, accountKey)
+	if err != nil {
+		return nil, err
 	}
 
 	cache := Cache{
-		Config: Config{
-			AccountName:   accName,
-			AccountKey:    accKey,
-			ContainerName: contName,
-		},
+		client:    client.GetBlobService(),
+		container: containerName,
 	}
 
-	api, err := vendorstorage.NewBasicClient(cache.Config.AccountName, cache.Config.AccountKey)
+	_, err := cache.client.CreateContainerIfNotExists(cache.container, storage.ContainerAccessTypeBlob)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
-	cache.Client = api.GetBlobService()
-
-	res, err := cache.Client.CreateContainerIfNotExists(cache.Config.ContainerName, vendorstorage.ContainerAccessTypeBlob)
-	if err != nil {
-		return nil, false, err
-	}
-
-	return &cache, res, nil
+	return &cache, nil
 }
