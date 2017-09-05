@@ -18,6 +18,9 @@ package azurestoragecache // import "github.com/PaulARoy/azurestoragecache"
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -37,6 +40,12 @@ type Cache struct {
 
 var noLogErrors, _ = strconv.ParseBool(os.Getenv("NO_LOG_AZUREBSCACHE_ERRORS"))
 
+func keyToFilename(key string) string {
+	h := md5.New()
+	io.WriteString(h, key)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 // blob retrieves a storage.Blob reference for the specified key.
 func (c *Cache) blob(key string) *storage.Blob {
 	return c.client.GetContainerReference(c.container).GetBlobReference(key)
@@ -44,6 +53,7 @@ func (c *Cache) blob(key string) *storage.Blob {
 
 // Get the cached value with the specified key.
 func (c *Cache) Get(key string) (resp []byte, ok bool) {
+	key = keyToFilename(key)
 	rdr, err := c.blob(key).Get(nil)
 	if err != nil {
 		return []byte{}, false
@@ -62,6 +72,7 @@ func (c *Cache) Get(key string) (resp []byte, ok bool) {
 
 // Set the cached value with the specified key.
 func (c *Cache) Set(key string, value []byte) {
+	key = keyToFilename(key)
 	err := c.blob(key).CreateBlockBlobFromReader(bytes.NewReader(value), nil)
 	if err != nil {
 		if !noLogErrors {
@@ -73,6 +84,7 @@ func (c *Cache) Set(key string, value []byte) {
 
 // Delete the cached value with the specified key.
 func (c *Cache) Delete(key string) {
+	key = keyToFilename(key)
 	res, err := c.blob(key).DeleteIfExists(nil)
 	if !noLogErrors {
 		log.Printf("azurestoragecache.Delete result: %s", res)
